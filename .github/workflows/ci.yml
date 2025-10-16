@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  python:
+    name: Python CI (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Lint (flake8)
+        run: flake8 .
+      - name: Seguridad dependencias (pip-audit)
+        run: pip-audit || true         # quita '|| true' para hacerlo estricto
+      - name: Seguridad código (bandit)
+        run: bandit -q -r app/ || true # quita '|| true' para hacerlo estricto
+      - name: Type checking (mypy)
+        run: mypy app/
+      - name: Tests + cobertura
+        run: |
+          coverage run -m pytest -q
+          coverage xml -o coverage.xml
+          coverage report -m
+      - name: Artifact cobertura
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.xml
+
+  node:
+    name: Node CI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: nodeapp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: nodeapp/package-lock.json
+      - name: Install deps
+        run: npm i --no-audit --no-fund
+      - name: Test
+        run: npm test

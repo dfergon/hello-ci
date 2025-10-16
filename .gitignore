@@ -1,0 +1,20 @@
+# Python / Venv
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage*
+coverage.xml
+htmlcov/
+
+# Node
+nodeapp/node_modules/
+
+# Build
+build/
+dist/
+
+# Editor
+.vscode/
+.idea/
