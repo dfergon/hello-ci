@@ -40,11 +40,12 @@ jobs:
           coverage run -m pytest -q
           coverage xml -o coverage.xml
           coverage report -m
-      - name: Artifact cobertura
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: coverage.xml
+     - name: Artifact cobertura
+  uses: actions/upload-artifact@v4
+  with:
+    name: coverage-${{ matrix.python-version }}
+    path: coverage.xml
+
 
   node:
     name: Node CI
